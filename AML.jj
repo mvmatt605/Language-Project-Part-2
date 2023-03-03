@@ -1,0 +1,98 @@
+PARSER_BEGIN(AML)
+
+   import java.io.*;
+
+   class AML {
+
+      public static void main(String[] args)
+         throws ParseException, TokenMgrError
+      {
+         if (args.length > 0) {
+	    try {
+	       AML scan = new AML(new FileInputStream(args[0]));
+	       scan.Program().eval();
+	    } catch (FileNotFoundException ex) {
+	       System.out.println("File "+args[0]+" not found.");
+	    }
+	 } else {
+	    System.out.println("Must specify source code file name.");
+	 }
+      }
+	
+   } // end class
+
+PARSER_END(AML)
+
+SKIP : { " " | "\t" | "\n" }
+TOKEN : { <INPUT : "enter input for"> }
+TOKEN : { <OUTPUT : "show"> }
+TOKEN : { <ASSIGN : "is"> }
+TOKEN : { <INT : ("0" | ["1"-"9"](["0"-"9"])*)> }
+TOKEN : { <DOT : "."> }
+TOKEN : { <ID : (["A"-"Z"] | ["a"-"z"]) (["A"-"Z"] | ["a"-"z"] | ["0"-"9"] | "_")*> }
+
+Node Assign():
+{
+	Node n;
+	Token t;
+}
+{
+	{n = new AssignNode();}
+	t = <ID> {n.addChild(new IDNode(t.image));}
+	<ASSIGN>
+	(
+	t = <INT> { n.addChild(new INTNode(t.image));} 
+	|
+	t = <ID> { n.addChild(new IDNode(t.image));}
+	)
+	<DOT>
+	{return n; }
+}
+
+Node Input():
+{
+	Node n;
+	Token t;
+}
+{
+	{n = new InputNode();}
+	<INPUT>
+	t= <ID> {n.addChild(new IDNode(t.image)); }
+	<DOT>
+	{ return n; }
+}
+
+Node Output():
+{
+	Node n;
+	Token t;
+}
+{
+	{n = new OutputNode();}
+	<OUTPUT>
+	(
+	t = <ID> {n.addChild(new IDNode(t.image)); }
+	|
+	t = <INT> {n.addChild(new INTNode(t.image)); } 
+	)
+	<DOT>
+	{return n;}
+}
+
+Node Program():
+{
+	Node n;
+	Node c;
+}
+{
+	{n = new BlockNode();}
+	(
+	c = Assign() {n.addChild(c);}
+	|
+	c = Input() {n.addChild(c);}
+	|
+	c = Output() {n.addChild(c);}
+	)+
+	<EOF>
+	{return n;}
+}
