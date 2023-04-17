@@ -30,21 +30,24 @@ TOKEN : { <ASSIGN : "is"> }
 TOKEN : { <INT : ("0" | ["1"-"9"](["0"-"9"])*)> }
 TOKEN : { <DOT : "."> }
 TOKEN : { <ID : (["A"-"Z"] | ["a"-"z"]) (["A"-"Z"] | ["a"-"z"] | ["0"-"9"] | "_")*> }
+TOKEN : { <LP : "("> }
+TOKEN : { <RP : ")"> }
+TOKEN : { <PLUS : "+"> }
+TOKEN : { <MINUS : "-"> }
+TOKEN : { <TIMES : "*"> }
+TOKEN : { <DIV : "/"> }
 
 Node Assign():
 {
 	Node n;
+	Node c;
 	Token t;
 }
 {
 	{n = new AssignNode();}
 	t = <ID> {n.addChild(new IDNode(t.image));}
 	<ASSIGN>
-	(
-	t = <INT> { n.addChild(new INTNode(t.image));} 
-	|
-	t = <ID> { n.addChild(new IDNode(t.image));}
-	)
+	c = Exp() {n.addChild(c);}
 	<DOT>
 	{return n; }
 }
@@ -65,17 +68,71 @@ Node Input():
 Node Output():
 {
 	Node n;
-	Token t;
+	Node c;
 }
 {
 	{n = new OutputNode();}
 	<OUTPUT>
-	(
-	t = <ID> {n.addChild(new IDNode(t.image)); }
-	|
-	t = <INT> {n.addChild(new INTNode(t.image)); } 
-	)
+	c = Exp() {n.addChild(c);}
 	<DOT>
+	{return n;}
+}
+
+Node factor():
+{
+        Node c;
+	Token t;
+}
+{
+	(
+	t = <ID> {return new IDNode(t.image); }
+	|
+	t = <INT> {return new INTNode(t.image); }
+	|
+	(
+	<LP> 
+	c = Exp() 
+	<RP>
+	)
+	)
+	{ return c; }
+}	
+
+Node Mexp():
+{
+        Node n;
+        Token t;
+	Node c;
+}
+{
+        {n = new ExpNode();}
+	c = factor() {n.addChild(c);} 
+	(	
+	t = <TIMES> 
+	c = factor() {n.addChild(new OpNode(t.image)); n.addChild(c); }
+	|
+	t = <DIV> 
+	c = factor() {n.addChild(new OpNode(t.image));n.addChild(c); }
+	)*
+	{return n;}
+}
+
+Node Exp():
+{
+	Node n;
+	Token t;
+	Node c;
+}
+{
+	{n = new ExpNode();}
+	c = Mexp() {n.addChild(c);}
+	(
+	t = <PLUS> 
+	c = Mexp() {n.addChild(new OpNode(t.image));n.addChild(c);}
+	| 
+	t = <MINUS> 
+	c = Mexp() {n.addChild (new OpNode(t.image));n.addChild(c); }
+	)*
 	{return n;}
 }
 
@@ -96,3 +153,4 @@ Node Program():
 	<EOF>
 	{return n;}
 }
+

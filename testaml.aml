@@ -1,7 +1,10 @@
-enter input for number.
-show number.
-show 42.
-othernumber is number.
-number is 42.
-show othernumber.
-show number.
+x is 3+1.
+show x.
+y is 3*1.
+show y.
+z is 4/2.
+show z.
+l is 3-1.
+show l.
+t is 4/(3-1).
+show t.
